@@ -6,7 +6,7 @@ $password = 'AWSLiveShop';
 
 try {
 $pdo = new PDO($dsn, $user, $password);
-//echo 'Connected!';
+echo 'Connected!';
 } catch (PDOException $e) {
 echo 'Connection failed: ' . $e->getMessage();
 }

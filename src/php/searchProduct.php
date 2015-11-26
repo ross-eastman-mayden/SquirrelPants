@@ -5,15 +5,45 @@ include '../../db/pdoconnect.php';
 $name = '%' . $_POST['name'] . '%';
 $description = '%' . $_POST['description'] . '%';
 $size = '%' . $_POST['size'] . '%';
-$price = '%' . $_POST['price'] . '%';
+$price = $_POST['price'];
+if ($price) {
+    $maxPrice = 'AND `retail_price` <= ' . $price;
+} else {
+    $maxPrice = '';
+}
+$sortBy = $_POST['sort'];
+switch ($sortBy) {
+    case 'price-desc':
+        $orderBy = '`retail_price` DESC';
+        break;
+    case 'price-asc':
+        $orderBy = '`retail_price` ASC';
+        break;
+    case 'orderByName':
+        $orderBy = 'name';
+        break;
+    case 'orderBySize':
+        $orderBy = 'size DESC';
+        break;
+    case 'orderByDescription':
+        $orderBy = 'description';
+        break;
+    default:
+        $orderBy = 'name';
+}
 
-$sql = "SELECT `name`, `description`, `size`, `retail_price` FROM product WHERE `name` LIKE :name AND `description` LIKE :description AND `size` LIKE :size AND `retail_price` LIKE :price;";
+$sql = " SELECT `name`, `description`, `size`, `retail_price` FROM product WHERE (`name` LIKE :name AND `description` LIKE :description AND `size` LIKE :size :maxPrice) ORDER BY $orderBy";
 $statement = $pdo->prepare($sql);
+
 $statement->bindParam(':name', $name);
 $statement->bindParam(':description', $description);
 $statement->bindParam(':size', $size);
-$statement->bindParam(':price', $price);
+$statement->bindParam(':maxPrice', $maxPrice);
 
+//$statement->bindParam(':sortBy', $orderBy);
+$statement->execute();
+//var_dump($statement->$queryString);
+echo $orderBy;
 $feedback_message2 = 'error running request - please try again';
 ?>
 <html>
@@ -26,7 +56,7 @@ $feedback_message2 = 'error running request - please try again';
 <body>
 <a href="searchpage.php">Go Back</a>
 <?php
-if (!$statement->execute()) {
+if (!$statement) {
     $arr = $statement->errorInfo();
     print_r($arr);
     ?>
@@ -35,9 +65,9 @@ if (!$statement->execute()) {
     <div class="feedback - message"><?php echo $feedback_message2; ?></div>
     <?php
 } else {
-    ?>
-    <div class="result">
-    <table>
+?>
+<div class="result">
+    <table class="table table-striped">
         <tr>
             <th>Name</th>
             <th>Description</th>
@@ -51,6 +81,6 @@ if (!$statement->execute()) {
         }
         ?>
     </table>
-    </div>
+</div>
 </body>
-    </html>
+</html>
